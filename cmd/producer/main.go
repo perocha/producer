@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/perocha/producer/pkg/appcontext"
 	"github.com/perocha/producer/pkg/config"
@@ -32,4 +36,21 @@ func main() {
 	ctx := context.WithValue(context.Background(), appcontext.TelemetryContextKey, telemetryClient)
 
 	telemetryClient.TrackTrace(ctx, "Producer started", telemetry.Information, nil, true)
+
+	// Create a channel to listen for termination signals
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+
+	// Loop forever
+	// Infinite loop
+	for {
+		select {
+		case <-signals:
+			telemetryClient.TrackTrace(ctx, "Main::Received termination signal", telemetry.Information, nil, true)
+			return
+		case <-time.After(2 * time.Minute):
+			// Do nothing
+			log.Println("Main::Waiting for termination signal")
+		}
+	}
 }
