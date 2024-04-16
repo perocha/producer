@@ -49,6 +49,10 @@ func main() {
 
 	// Start the producer
 	serviceInstance := service.Initialize(ctx, eventHubInstance)
+	if serviceInstance == nil {
+		telemetryClient.TrackException(ctx, "Main::Failed to initialize service", err, telemetry.Error, nil, true)
+		panic("Main::Failed to initialize service")
+	}
 	telemetryClient.TrackTrace(ctx, "Producer started", telemetry.Information, nil, true)
 
 	// Create a channel to listen for termination signals
@@ -81,11 +85,15 @@ func main() {
 				},
 			}
 
-			// Publish an event to the EventHub
-			err := serviceInstance.PublishEvent(ctx, event)
-			if err != nil {
-				telemetryClient.TrackException(ctx, "Main::Failed to publish event", err, telemetry.Error, nil, true)
-			}
+			telemetryClient.TrackTrace(ctx, "Main::Publishing event", telemetry.Information, event.ToMap(), true)
+
+			/*
+				// Publish an event to the EventHub
+				err := serviceInstance.PublishEvent(ctx, event)
+				if err != nil {
+					telemetryClient.TrackException(ctx, "Main::Failed to publish event", err, telemetry.Error, nil, true)
+				}
+			*/
 		}
 	}
 }
