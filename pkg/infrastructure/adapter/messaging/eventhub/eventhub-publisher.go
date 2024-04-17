@@ -99,7 +99,7 @@ func (p *ProducerClient) Publish(ctx context.Context, event event.Event) error {
 		return err
 	}
 
-	telemetryClient.TrackDependency(ctx, "Eventhub::Publish", "Publish EventHub message", "EventHub", p.eventHubName, true, startTime, time.Now(), nil, true)
+	telemetryClient.TrackDependency(ctx, "Eventhub", "Publish EventHub message", "EventHub", p.eventHubName, true, startTime, time.Now(), nil, true)
 
 	return nil
 }

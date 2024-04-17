@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	SERVICE_NAME = "OrderProcessing"
+	SERVICE_NAME = "Producer"
 )
 
 // Telemetry defines the telemetry client
