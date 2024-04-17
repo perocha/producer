@@ -58,7 +58,7 @@ func (p *ProducerClient) Publish(ctx context.Context, event event.Event) error {
 	}
 
 	// Create a new batch
-	batch, err := p.client.NewEventDataBatch(context.TODO(), nil)
+	batch, err := p.client.NewEventDataBatch(ctx, nil)
 	if err != nil {
 		panic(err)
 	}

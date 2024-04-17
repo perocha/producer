@@ -66,7 +66,7 @@ func main() {
 		case <-signals:
 			telemetryClient.TrackTrace(ctx, "Main::Received termination signal", telemetry.Information, nil, true)
 			return
-		case <-time.After(2 * time.Minute):
+		case <-time.After(2 * time.Second):
 			// Generate an event UUID
 			eventID := uuid.New().String()
 			orderID := uuid.New().String()
@@ -87,13 +87,11 @@ func main() {
 
 			telemetryClient.TrackTrace(ctx, "Main::Publishing event", telemetry.Information, event.ToMap(), true)
 
-			/*
-				// Publish an event to the EventHub
-				err := serviceInstance.PublishEvent(ctx, event)
-				if err != nil {
-					telemetryClient.TrackException(ctx, "Main::Failed to publish event", err, telemetry.Error, nil, true)
-				}
-			*/
+			// Publish an event to the EventHub
+			err := serviceInstance.PublishEvent(ctx, event)
+			if err != nil {
+				telemetryClient.TrackException(ctx, "Main::Failed to publish event", err, telemetry.Error, nil, true)
+			}
 		}
 	}
 }

@@ -52,7 +52,7 @@ func InitializeConfig() *Config {
 
 	cfg.AppInsightsInstrumentationKey, _ = cfg.GetVar("APPINSIGHTS_INSTRUMENTATIONKEY")
 	cfg.EventHubName, _ = cfg.GetVar("EVENTHUB_NAME")
-	cfg.EventHubConnectionString, _ = cfg.GetVar("EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING")
+	cfg.EventHubConnectionString, _ = cfg.GetVar("EVENTHUB_PUBLISHER_CONNECTION_STRING")
 
 	return cfg
 }
