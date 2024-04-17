@@ -19,10 +19,7 @@ type ProducerClient struct {
 
 // Initialize a new EventHub producer instance
 func ProducerInit(ctx context.Context, connectionString, eventHubName string) (*ProducerClient, error) {
-	startTime := time.Now()
-
 	telemetryClient := telemetry.GetTelemetryClient(ctx)
-	telemetryClient.TrackTrace(ctx, "EventHub::ProducerInit::Start", telemetry.Information, nil, true)
 
 	// Create a new producer client
 	client, err := azeventhubs.NewProducerClientFromConnectionString(connectionString, eventHubName, nil)
@@ -30,11 +27,11 @@ func ProducerInit(ctx context.Context, connectionString, eventHubName string) (*
 		properties := map[string]string{
 			"Error": err.Error(),
 		}
-		telemetryClient.TrackTrace(ctx, "EventHub::ProducerInit::Failed", telemetry.Error, properties, true)
+		telemetryClient.TrackException(ctx, "EventHub::ProducerInit::Failed", err, telemetry.Critical, properties, true)
 		return nil, err
 	}
 
-	telemetryClient.TrackDependency(ctx, "Eventhub::ProducerInit", "Initialize EventHub producer", "EventHub", eventHubName, true, startTime, time.Now(), nil, true)
+	telemetryClient.TrackTrace(ctx, "EventHub::ProducerInit::Eventhub initialization completed successfully", telemetry.Information, nil, true)
 
 	return &ProducerClient{
 		client:       client,
@@ -109,21 +106,18 @@ func (p *ProducerClient) Publish(ctx context.Context, event event.Event) error {
 
 // Close the EventHub producer
 func (p *ProducerClient) Close(ctx context.Context) error {
-	startTime := time.Now()
-
 	telemetryClient := telemetry.GetTelemetryClient(ctx)
-	telemetryClient.TrackTrace(ctx, "EventHub::Close::Start", telemetry.Information, nil, true)
 
 	err := p.client.Close(ctx)
 	if err != nil {
 		properties := map[string]string{
 			"Error": err.Error(),
 		}
-		telemetryClient.TrackTrace(ctx, "EventHub::Close::Failed", telemetry.Error, properties, true)
+		telemetryClient.TrackException(ctx, "EventHub::Close::Failed", err, telemetry.Critical, properties, true)
 		return err
 	}
 
-	telemetryClient.TrackDependency(ctx, "Eventhub::Close", "Close EventHub producer", "EventHub", "", true, startTime, time.Now(), nil, true)
+	telemetryClient.TrackTrace(ctx, "EventHub::Closing eventhub", telemetry.Information, nil, true)
 
 	return nil
 }

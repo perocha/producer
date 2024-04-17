@@ -26,7 +26,6 @@ func Initialize(ctx context.Context, messagingSystem messaging.MessagingSystem) 
 // Publish an event to the messaging system
 func (s *ServiceImpl) PublishEvent(ctx context.Context, event event.Event) error {
 	telemetryClient := telemetry.GetTelemetryClient(ctx)
-	telemetryClient.TrackTrace(ctx, "Service::Publish::Start", telemetry.Information, nil, true)
 
 	err := s.messagingClient.Publish(ctx, event)
 	if err != nil {
@@ -36,8 +35,6 @@ func (s *ServiceImpl) PublishEvent(ctx context.Context, event event.Event) error
 		telemetryClient.TrackException(ctx, "Service::Publish::Failed", err, telemetry.Error, properties, true)
 		return err
 	}
-
-	telemetryClient.TrackTrace(ctx, "Service::Publish::End", telemetry.Information, nil, true)
 
 	return nil
 }
