@@ -65,7 +65,7 @@ func main() {
 		case <-signals:
 			telemetryClient.TrackTrace(ctx, "Main::Received termination signal", telemetry.Information, nil, true)
 			return
-		case <-time.After(1 * time.Minute):
+		case <-time.After(10 * time.Second):
 			// Generate an event UUID
 			eventID := uuid.New().String()
 			orderID := uuid.New().String()
