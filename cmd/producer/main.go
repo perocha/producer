@@ -36,8 +36,7 @@ func main() {
 	// Initialize App Insights
 	telemetryClient, err := telemetry.Initialize(cfg.AppInsightsInstrumentationKey, SERVICE_NAME)
 	if err != nil {
-		log.Printf("Main::Fatal error::Failed to initialize App Insights %s\n", err.Error())
-		panic("Main::Failed to initialize App Insights")
+		log.Fatalf("Main::Fatal error::Failed to initialize App Insights %s\n", err.Error())
 	}
 	// Add telemetry object to the context, so that it can be reused across the application
 	ctx := context.WithValue(context.Background(), telemetry.TelemetryContextKey, telemetryClient)
@@ -46,14 +45,14 @@ func main() {
 	eventHubInstance, err := eventhub.ProducerInit(ctx, cfg.EventHubConnectionString, cfg.EventHubName)
 	if err != nil {
 		telemetryClient.TrackException(ctx, "Main::Failed to initialize EventHub", err, telemetry.Error, nil, true)
-		panic("Main::Failed to initialize EventHub")
+		log.Fatalf("Main::Fatal error::Failed to initialize EventHub %s\n", err.Error())
 	}
 
 	// Start the producer
 	serviceInstance := service.Initialize(ctx, eventHubInstance)
 	if serviceInstance == nil {
 		telemetryClient.TrackException(ctx, "Main::Failed to initialize service", err, telemetry.Error, nil, true)
-		panic("Main::Failed to initialize service")
+		log.Fatalf("Main::Fatal error::Failed to initialize service %s\n", err.Error())
 	}
 	telemetryClient.TrackTrace(ctx, "Producer started", telemetry.Information, nil, true)
 

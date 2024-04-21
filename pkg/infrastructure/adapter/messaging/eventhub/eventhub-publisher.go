@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs"
@@ -31,11 +30,18 @@ func ProducerInit(ctx context.Context, connectionString, eventHubName string) (*
 		return nil, err
 	}
 
+	// Obtain the eventHubName from the producer client
+	eventHubProperties, err := client.GetEventHubProperties(ctx, nil)
+	if err != nil {
+		telemetryClient.TrackException(ctx, "EventHubAdapter::Error getting event hub properties", err, telemetry.Critical, nil, true)
+		return nil, err
+	}
+
 	telemetryClient.TrackTrace(ctx, "EventHub::ProducerInit::Eventhub initialization completed successfully", telemetry.Information, nil, true)
 
 	return &ProducerClient{
 		client:       client,
-		eventHubName: eventHubName,
+		eventHubName: eventHubProperties.Name,
 	}, nil
 }
 
@@ -57,6 +63,7 @@ func (p *ProducerClient) Publish(ctx context.Context, event event.Event) error {
 	// Create a new batch
 	batch, err := p.client.NewEventDataBatch(ctx, nil)
 	if err != nil {
+		telemetryClient.TrackException(ctx, "EventHub::Publish::Failed", err, telemetry.Critical, nil, true)
 		panic(err)
 	}
 
@@ -81,12 +88,10 @@ func (p *ProducerClient) Publish(ctx context.Context, event event.Event) error {
 		//
 		// If this is the _only_ message being added to the batch then it's too big in general, and
 		// will need to be split or shrunk to fit.
-		log.Printf("Publish::Message too large to fit into this batch\n")
 		telemetryClient.TrackException(ctx, "Publish::Message too large to fit into this batch", err, telemetry.Critical, nil, true)
 		return err
 	} else if err != nil {
 		// Some other error occurred
-		log.Printf("Publish::Failed to add message to batch: %s\n", err.Error())
 		telemetryClient.TrackException(ctx, "Publish::Failed to add message to batch", err, telemetry.Critical, nil, true)
 		return err
 	}

@@ -45,10 +45,6 @@ func (cfg *MicroserviceConfig) RefreshConfig() error {
 		return err
 	}
 
-	if err := retrieveConfigValue(cfg, "EVENTHUB_NAME", &cfg.EventHubName); err != nil {
-		return err
-	}
-
 	if err := retrieveConfigValue(cfg, "EVENTHUB_PUBLISHER_CONNECTION_STRING", &cfg.EventHubConnectionString); err != nil {
 		return err
 	}
