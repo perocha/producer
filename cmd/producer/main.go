@@ -61,14 +61,21 @@ func main() {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
-	// Loop forever
 	// Infinite loop
 	for {
+		// Refresh the configuration to get the Timer Duration
+		cfg.RefreshConfig()
+		timerDuration := cfg.TimerDuration
+		timerDurationInt, err := time.ParseDuration(timerDuration)
+		if err != nil {
+			timerDurationInt = 1 * time.Minute
+		}
+
 		select {
 		case <-signals:
 			telemetryClient.TrackTrace(ctx, "Main::Received termination signal", telemetry.Information, nil, true)
 			return
-		case <-time.After(10 * time.Second):
+		case <-time.After(timerDurationInt):
 			// Generate an event UUID
 			eventID := uuid.New().String()
 			orderID := uuid.New().String()

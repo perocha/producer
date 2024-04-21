@@ -5,7 +5,7 @@ go 1.22.2
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs v1.1.0
 	github.com/google/uuid v1.6.0
-	github.com/perocha/goutils v1.0.2
+	github.com/perocha/goutils v1.0.4
 )
 
 require (

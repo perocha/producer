@@ -8,9 +8,10 @@ import (
 
 type MicroserviceConfig struct {
 	configClient                  *config.Config
+	AppInsightsInstrumentationKey string
 	EventHubName                  string
 	EventHubConnectionString      string
-	AppInsightsInstrumentationKey string
+	TimerDuration                 string
 }
 
 // Initialize configuration client, either from environment variable or from file
@@ -40,23 +41,31 @@ func InitializeConfig() (*MicroserviceConfig, error) {
 
 // Refresh configuration, with the latest values from the configuration store
 func (cfg *MicroserviceConfig) RefreshConfig() error {
-	configValue, err := cfg.configClient.GetVar("APPINSIGHTS_INSTRUMENTATIONKEY")
+	if err := retrieveConfigValue(cfg, "APPINSIGHTS_INSTRUMENTATIONKEY", &cfg.AppInsightsInstrumentationKey); err != nil {
+		return err
+	}
+
+	if err := retrieveConfigValue(cfg, "EVENTHUB_NAME", &cfg.EventHubName); err != nil {
+		return err
+	}
+
+	if err := retrieveConfigValue(cfg, "EVENTHUB_PUBLISHER_CONNECTION_STRING", &cfg.EventHubConnectionString); err != nil {
+		return err
+	}
+
+	if err := retrieveConfigValue(cfg, "PRODUCER_TIMER_DURATION", &cfg.TimerDuration); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// RetrieveConfigValue retrieves a configuration value from the client and sets it in the target field.
+func retrieveConfigValue(cfg *MicroserviceConfig, key string, target *string) error {
+	configValue, err := cfg.configClient.GetVar(key)
 	if err != nil {
 		return err
 	}
-	cfg.AppInsightsInstrumentationKey = configValue
-
-	configValue, err = cfg.configClient.GetVar("EVENTHUB_NAME")
-	if err != nil {
-		return err
-	}
-	cfg.EventHubName = configValue
-
-	configValue, err = cfg.configClient.GetVar("EVENTHUB_PUBLISHER_CONNECTION_STRING")
-	if err != nil {
-		return err
-	}
-	cfg.EventHubConnectionString = configValue
-
+	*target = configValue
 	return nil
 }
