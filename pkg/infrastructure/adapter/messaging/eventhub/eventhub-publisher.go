@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs"
+	"github.com/perocha/goutils/pkg/telemetry"
 	"github.com/perocha/producer/pkg/domain/event"
-	"github.com/perocha/producer/pkg/infrastructure/telemetry"
 )
 
 type ProducerClient struct {

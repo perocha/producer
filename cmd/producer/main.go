@@ -9,12 +9,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/perocha/producer/pkg/appcontext"
+	"github.com/perocha/goutils/pkg/telemetry"
 	"github.com/perocha/producer/pkg/config"
 	"github.com/perocha/producer/pkg/domain/event"
 	"github.com/perocha/producer/pkg/domain/order"
 	"github.com/perocha/producer/pkg/infrastructure/adapter/messaging/eventhub"
-	"github.com/perocha/producer/pkg/infrastructure/telemetry"
 	"github.com/perocha/producer/pkg/service"
 )
 
@@ -38,7 +37,7 @@ func main() {
 		panic("Main::Failed to initialize App Insights")
 	}
 	// Add telemetry object to the context, so that it can be reused across the application
-	ctx := context.WithValue(context.Background(), appcontext.TelemetryContextKey, telemetryClient)
+	ctx := context.WithValue(context.Background(), telemetry.TelemetryContextKey, telemetryClient)
 
 	// Initialize EventHub
 	eventHubInstance, err := eventhub.ProducerInit(ctx, cfg.EventHubConnectionString, cfg.EventHubName)

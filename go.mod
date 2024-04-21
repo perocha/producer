@@ -16,6 +16,7 @@ require (
 	github.com/Azure/go-amqp v1.0.5 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/perocha/goutils v1.0.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 )

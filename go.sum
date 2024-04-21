@@ -53,6 +53,10 @@ github.com/microsoft/ApplicationInsights-Go v0.4.4/go.mod h1:fKRUseBqkw6bDiXTs3E
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.8.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/gomega v1.5.0/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
+github.com/perocha/goutils v0.0.0-20240420131237-e17771352389 h1:DRdmsomQe+f9Tmx3WPA+b5OD6O6WNIBcRSl1PeqNjnc=
+github.com/perocha/goutils v0.0.0-20240420131237-e17771352389/go.mod h1:GXDui0sE2kpr3LTnTvtNlDPmJ8NafMz2ZpOQ3x/ypuM=
+github.com/perocha/goutils v1.0.0 h1:Vffk4jXk4T4lPFwYAaDTxOX1VY5/LVunvvQzqIsdFK0=
+github.com/perocha/goutils v1.0.0/go.mod h1:Vz76EmFDOHI+NYM+Z1ExTTvFl8s3RjpZu4OUe2NE5+M=
 github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c h1:+mdjkGKdHQG3305AYmdv1U2eRNDiU2ErMBj1gwrq8eQ=
 github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c/go.mod h1:7rwL4CYBLnjLxUqIJNnCWiEdr3bn6IUYi15bNlnbCCU=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

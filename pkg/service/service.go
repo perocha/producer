@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 
+	"github.com/perocha/goutils/pkg/telemetry"
 	"github.com/perocha/producer/pkg/domain/event"
 	"github.com/perocha/producer/pkg/infrastructure/adapter/messaging"
-	"github.com/perocha/producer/pkg/infrastructure/telemetry"
 )
 
 // ServiceImpl struct
