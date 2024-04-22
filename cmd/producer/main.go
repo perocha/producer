@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/perocha/goadapters/messaging/eventhub"
 	"github.com/perocha/goutils/pkg/telemetry"
 	"github.com/perocha/producer/pkg/config"
 	"github.com/perocha/producer/pkg/domain/event"
 	"github.com/perocha/producer/pkg/domain/order"
-	"github.com/perocha/producer/pkg/infrastructure/adapter/messaging/eventhub"
 	"github.com/perocha/producer/pkg/service"
 )
 
@@ -42,7 +42,7 @@ func main() {
 	ctx := context.WithValue(context.Background(), telemetry.TelemetryContextKey, telemetryClient)
 
 	// Initialize EventHub
-	eventHubInstance, err := eventhub.ProducerInit(ctx, cfg.EventHubConnectionString, cfg.EventHubName)
+	eventHubInstance, err := eventhub.ProducerInitializer(ctx, cfg.EventHubName, cfg.EventHubConnectionString)
 	if err != nil {
 		telemetryClient.TrackException(ctx, "Main::Failed to initialize EventHub", err, telemetry.Error, nil, true)
 		log.Fatalf("Main::Fatal error::Failed to initialize EventHub %s\n", err.Error())

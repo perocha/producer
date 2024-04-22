@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 
+	"github.com/perocha/goadapters/messaging"
 	"github.com/perocha/goutils/pkg/telemetry"
 	"github.com/perocha/producer/pkg/domain/event"
-	"github.com/perocha/producer/pkg/infrastructure/adapter/messaging"
 )
 
 // ServiceImpl struct
@@ -15,9 +15,6 @@ type ServiceImpl struct {
 
 // Creates a new instance of ServiceImpl.
 func Initialize(ctx context.Context, messagingSystem messaging.MessagingSystem) *ServiceImpl {
-	telemetryClient := telemetry.GetTelemetryClient(ctx)
-	telemetryClient.TrackTrace(ctx, "Service::Initialize::Start", telemetry.Information, nil, true)
-
 	return &ServiceImpl{
 		messagingClient: messagingSystem,
 	}
