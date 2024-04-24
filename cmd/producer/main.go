@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"os"
 	"os/signal"
@@ -10,9 +11,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/perocha/goadapters/messaging/eventhub"
+	"github.com/perocha/goadapters/messaging/message"
 	"github.com/perocha/goutils/pkg/telemetry"
 	"github.com/perocha/producer/pkg/config"
-	"github.com/perocha/producer/pkg/domain/event"
 	"github.com/perocha/producer/pkg/domain/order"
 	"github.com/perocha/producer/pkg/service"
 )
@@ -75,30 +76,39 @@ func main() {
 			telemetryClient.TrackTrace(ctx, "Main::Received termination signal", telemetry.Information, nil, true)
 			return
 		case <-time.After(timerDurationInt):
-			// Generate an event UUID
-			eventID := uuid.New().String()
-			orderID := uuid.New().String()
+			// Create a new message
+			operationID := uuid.New().String()
+			commandType := "create_order"
 
-			// Initialize a new event with random order ID
-			event := event.Event{
-				Type:      "create_order",
-				EventID:   eventID,
-				Timestamp: time.Now(),
-				OrderPayload: order.Order{
-					Id:              orderID,
-					ProductCategory: "Electronics",
-					ProductID:       "ABC",
-					CustomerID:      "1234",
-					Status:          "Pending",
-				},
+			// Create the order info
+			orderPayload := order.Order{
+				Id:              uuid.New().String(),
+				ProductCategory: "Electronics",
+				ProductID:       "ABC",
+				CustomerID:      "1234",
+				Status:          "Pending",
 			}
 
+			// Serialize the orderPayload
+			jsonData, err := json.Marshal(orderPayload)
+			if err != nil {
+				telemetryClient.TrackException(ctx, "Main::Failed to serialize order", err, telemetry.Error, nil, true)
+				continue
+			}
+
+			// Create the new message
+			newMessage := message.NewMessage(operationID, nil, "", commandType, jsonData)
+
 			// Publish an event to the EventHub
-			err := serviceInstance.PublishEvent(ctx, event)
+			err = serviceInstance.PublishEvent(ctx, newMessage)
 			if err != nil {
 				telemetryClient.TrackException(ctx, "Main::Failed to publish event", err, telemetry.Error, nil, true)
 			}
-			telemetryClient.TrackTrace(ctx, "Main::Publishing event", telemetry.Information, event.ToMap(), true)
+			// TODO, print the message to the console
+			properties := map[string]string{
+				"OperationID": operationID,
+			}
+			telemetryClient.TrackTrace(ctx, "Main::Publishing event", telemetry.Information, properties, true)
 		}
 	}
 }

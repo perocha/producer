@@ -1,5 +1,7 @@
 package order
 
+import "encoding/json"
+
 // Order definition
 type Order struct {
 	Id              string `json:"id"`
@@ -7,6 +9,11 @@ type Order struct {
 	ProductID       string `json:"productId"`
 	CustomerID      string `json:"customerId"`
 	Status          string `json:"status"`
+}
+
+// Serialize transforms the Order instance into a []byte
+func (e *Order) Serialize() ([]byte, error) {
+	return json.Marshal(e)
 }
 
 // Convert Order struct into a map[string]string
