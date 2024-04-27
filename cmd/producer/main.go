@@ -34,28 +34,29 @@ func main() {
 		log.Fatalf("Main::Fatal error::Failed to refresh configuration %s\n", err.Error())
 	}
 
-	// Initialize App Insights
-	telemetryClient, err := telemetry.Initialize(cfg.AppInsightsInstrumentationKey, SERVICE_NAME)
+	// Initialize telemetry package
+	telemetryConfig := telemetry.NewXTelemetryConfig(cfg.AppInsightsInstrumentationKey, SERVICE_NAME, "debug", 1)
+	xTelemetry, err := telemetry.NewXTelemetry(telemetryConfig)
 	if err != nil {
-		log.Fatalf("Main::Fatal error::Failed to initialize App Insights %s\n", err.Error())
+		log.Fatalf("Main::Fatal error::Failed to initialize XTelemetry %s\n", err.Error())
 	}
 	// Add telemetry object to the context, so that it can be reused across the application
-	ctx := context.WithValue(context.Background(), telemetry.TelemetryContextKey, telemetryClient)
+	ctx := context.WithValue(context.Background(), telemetry.TelemetryContextKey, xTelemetry)
 
 	// Initialize EventHub
 	eventHubInstance, err := eventhub.ProducerInitializer(ctx, cfg.EventHubName, cfg.EventHubConnectionString)
 	if err != nil {
-		telemetryClient.TrackException(ctx, "Main::Failed to initialize EventHub", err, telemetry.Error, nil, true)
-		log.Fatalf("Main::Fatal error::Failed to initialize EventHub %s\n", err.Error())
+		xTelemetry.Error(ctx, "Main::Failed to initialize EventHub", telemetry.String("Error", err.Error()))
+		panic(err)
 	}
 
 	// Start the producer
 	serviceInstance := service.Initialize(ctx, eventHubInstance)
 	if serviceInstance == nil {
-		telemetryClient.TrackException(ctx, "Main::Failed to initialize service", err, telemetry.Error, nil, true)
-		log.Fatalf("Main::Fatal error::Failed to initialize service %s\n", err.Error())
+		xTelemetry.Error(ctx, "Main::Failed to initialize service", telemetry.String("Error", "Failed to initialize service"))
+		panic("Failed to initialize service")
 	}
-	telemetryClient.TrackTrace(ctx, "Producer started", telemetry.Information, nil, true)
+	xTelemetry.Info(ctx, "Main::Service initialized successfully")
 
 	// Create a channel to listen for termination signals
 	signals := make(chan os.Signal, 1)
@@ -73,7 +74,8 @@ func main() {
 
 		select {
 		case <-signals:
-			telemetryClient.TrackTrace(ctx, "Main::Received termination signal", telemetry.Information, nil, true)
+			// Termination signal received
+			xTelemetry.Info(ctx, "Main::Received termination signal")
 			return
 		case <-time.After(timerDurationInt):
 			// Create a new message
@@ -92,7 +94,7 @@ func main() {
 			// Serialize the orderPayload
 			jsonData, err := json.Marshal(orderPayload)
 			if err != nil {
-				telemetryClient.TrackException(ctx, "Main::Failed to serialize order", err, telemetry.Error, nil, true)
+				xTelemetry.Error(ctx, "Main::Failed to serialize order", telemetry.String("Error", err.Error()))
 				continue
 			}
 
@@ -102,13 +104,11 @@ func main() {
 			// Publish an event to the EventHub
 			err = serviceInstance.PublishEvent(ctx, newMessage)
 			if err != nil {
-				telemetryClient.TrackException(ctx, "Main::Failed to publish event", err, telemetry.Error, nil, true)
+				xTelemetry.Error(ctx, "Main::Failed to publish event", telemetry.String("Error", err.Error()))
 			}
+
 			// TODO, print the message to the console
-			properties := map[string]string{
-				"OperationID": operationID,
-			}
-			telemetryClient.TrackTrace(ctx, "Main::Publishing event", telemetry.Information, properties, true)
+			xTelemetry.Info(ctx, "Main::Published event", telemetry.String("OperationID", operationID))
 		}
 	}
 }

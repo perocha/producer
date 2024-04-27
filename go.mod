@@ -4,8 +4,8 @@ go 1.22.2
 
 require (
 	github.com/google/uuid v1.6.0
-	github.com/perocha/goadapters v1.0.23
-	github.com/perocha/goutils v1.0.4
+	github.com/perocha/goadapters v1.0.29
+	github.com/perocha/goutils v1.0.36
 )
 
 require (
@@ -18,6 +18,8 @@ require (
 	github.com/Azure/go-amqp v1.0.5 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/microsoft/ApplicationInsights-Go v0.4.4 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
+	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
