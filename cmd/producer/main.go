@@ -107,8 +107,9 @@ func main() {
 				xTelemetry.Error(ctx, "Main::Failed to publish event", telemetry.String("Error", err.Error()))
 			}
 
-			// TODO, print the message to the console
-			xTelemetry.Info(ctx, "Main::Published event", telemetry.String("OperationID", operationID))
+			// Add the operation ID to the context
+			ctx := context.WithValue(context.Background(), telemetry.OperationIDKeyContextKey, operationID)
+			xTelemetry.Info(ctx, "Main::Published event")
 		}
 	}
 }
