@@ -51,7 +51,7 @@ func main() {
 		panic(err)
 	}
 
-	// Start the producer
+	// Start the service instance
 	serviceInstance := service.Initialize(ctx, eventHubInstance)
 	if serviceInstance == nil {
 		xTelemetry.Error(ctx, "Main::Failed to initialize service", telemetry.String("Error", "Failed to initialize service"))
@@ -73,9 +73,10 @@ func main() {
 
 	// Start an HTTP server
 	go func() {
-		err := http.ListenAndServe(":8080", nil)
+		err := http.ListenAndServe(":"+cfg.HttpPortNumber, nil)
 		if err != nil {
-			log.Fatalf("Main::Fatal error::Failed to start HTTP server %s\n", err.Error())
+			xTelemetry.Error(ctx, "Main::Failed to start HTTP server", telemetry.String("Error", err.Error()))
+			panic(err)
 		}
 	}()
 
@@ -85,19 +86,12 @@ func main() {
 
 	// Infinite loop
 	for {
-		// Get the timer duration from the configuration
-		timerDuration := cfg.TimerDuration
-		timerDurationInt, err := time.ParseDuration(timerDuration)
-		if err != nil {
-			timerDurationInt = 1 * time.Minute
-		}
-
 		select {
 		case <-signals:
 			// Termination signal received
 			xTelemetry.Info(ctx, "Main::Received termination signal")
 			return
-		case <-time.After(timerDurationInt):
+		case <-time.After(cfg.GetTimerDuration()):
 			// Create a new message
 			operationID := uuid.New().String()
 			commandType := "create_order"

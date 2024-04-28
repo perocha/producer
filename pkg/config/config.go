@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"time"
 
 	"github.com/perocha/goutils/pkg/config"
 )
@@ -12,6 +13,7 @@ type MicroserviceConfig struct {
 	EventHubName                  string
 	EventHubConnectionString      string
 	TimerDuration                 string
+	HttpPortNumber                string
 }
 
 // Initialize configuration client, either from environment variable or from file
@@ -53,6 +55,10 @@ func (cfg *MicroserviceConfig) RefreshConfig() error {
 		return err
 	}
 
+	if err := retrieveConfigValue(cfg, "HTTP_PORT_NUMBER", &cfg.HttpPortNumber); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -64,4 +70,15 @@ func retrieveConfigValue(cfg *MicroserviceConfig, key string, target *string) er
 	}
 	*target = configValue
 	return nil
+}
+
+// Retrieve timer duration
+func (cfg *MicroserviceConfig) GetTimerDuration() time.Duration {
+	timerDurationInt, err := time.ParseDuration(cfg.TimerDuration)
+	if err != nil {
+		// Default to 1 minute
+		timerDurationInt = 1 * time.Minute
+	}
+
+	return timerDurationInt
 }
