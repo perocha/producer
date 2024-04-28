@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -58,14 +59,33 @@ func main() {
 	}
 	xTelemetry.Info(ctx, "Main::Service initialized successfully")
 
+	// Define an HTTP handler function for refreshing configuration
+	http.HandleFunc("/refresh-config", func(w http.ResponseWriter, r *http.Request) {
+		// Refresh the configuration with the latest values
+		err := cfg.RefreshConfig()
+		if err != nil {
+			http.Error(w, "Failed to refresh configuration", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Configuration refreshed successfully"))
+	})
+
+	// Start an HTTP server
+	go func() {
+		err := http.ListenAndServe(":8080", nil)
+		if err != nil {
+			log.Fatalf("Main::Fatal error::Failed to start HTTP server %s\n", err.Error())
+		}
+	}()
+
 	// Create a channel to listen for termination signals
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
 	// Infinite loop
 	for {
-		// Refresh the configuration to get the Timer Duration
-		cfg.RefreshConfig()
+		// Get the timer duration from the configuration
 		timerDuration := cfg.TimerDuration
 		timerDurationInt, err := time.ParseDuration(timerDuration)
 		if err != nil {
