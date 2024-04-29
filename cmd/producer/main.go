@@ -64,9 +64,11 @@ func main() {
 		// Refresh the configuration with the latest values
 		err := cfg.RefreshConfig()
 		if err != nil {
+			xTelemetry.Error(ctx, "Main::Failed to refresh configuration", telemetry.String("Error", err.Error()))
 			http.Error(w, "Failed to refresh configuration", http.StatusInternalServerError)
 			return
 		}
+		xTelemetry.Info(ctx, "Main::Configuration refreshed successfully")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Configuration refreshed successfully"))
 	})
