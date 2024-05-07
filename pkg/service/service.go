@@ -111,6 +111,7 @@ func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r co
 	body := r.Body()
 	if body == nil {
 		xTelemetry.Error(ctx, "Service::NewEvent::Failed to read body", telemetry.String("Error", "Body is nil"))
+		w.Write([]byte("Failed to read body"))
 		w.WriteHeader(int(httpadapter.StatusBadRequest))
 		return
 	}
@@ -119,18 +120,21 @@ func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r co
 	operationID := r.Header("OperationID")
 	if operationID == "" {
 		xTelemetry.Error(ctx, "Service::NewEvent::OperationID not found", telemetry.String("Error", "OperationID not found in the request header"))
+		w.Write([]byte("OperationID not found in the request header"))
 		w.WriteHeader(int(httpadapter.StatusBadRequest))
 		return
 	}
 	status := r.Header("Status")
 	if status == "" {
 		xTelemetry.Error(ctx, "Service::NewEvent::Status not found", telemetry.String("Error", "Status not found in the request header"))
+		w.Write([]byte("Status not found in the request header"))
 		w.WriteHeader(int(httpadapter.StatusBadRequest))
 		return
 	}
 	command := r.Header("Command")
 	if command == "" {
 		xTelemetry.Error(ctx, "Service::NewEvent::Command not found", telemetry.String("Error", "Command not found in the request header"))
+		w.Write([]byte("Command not found in the request header"))
 		w.WriteHeader(int(httpadapter.StatusBadRequest))
 		return
 	}
@@ -141,10 +145,13 @@ func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r co
 	err := s.publishEvent(ctx, msg)
 	if err != nil {
 		xTelemetry.Error(ctx, "Service::NewEvent::Failed to publish event", telemetry.String("Error", err.Error()))
+		w.Write([]byte("Failed to publish event"))
 		w.WriteHeader(int(httpadapter.StatusInternalServerError))
 		return
 	}
 
+	xTelemetry.Info(ctx, "Service::NewEvent::OK")
+	w.Write([]byte("Event published successfully"))
 	w.WriteHeader(int(httpadapter.StatusOK))
 }
 
