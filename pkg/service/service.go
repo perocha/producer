@@ -151,8 +151,8 @@ func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r co
 	}
 
 	xTelemetry.Info(ctx, "Service::NewEvent::OK")
-	w.Write([]byte("Event published successfully"))
 	w.WriteHeader(int(httpadapter.StatusOK))
+	w.Write([]byte("Event published successfully"))
 }
 
 // Publish an event to the messaging system
