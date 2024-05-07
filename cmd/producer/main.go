@@ -2,20 +2,16 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/perocha/goadapters/comms/httpadapter"
 	"github.com/perocha/goadapters/messaging/eventhub"
-	"github.com/perocha/goadapters/messaging/message"
 	"github.com/perocha/goutils/pkg/telemetry"
 	"github.com/perocha/producer/pkg/config"
-	"github.com/perocha/producer/pkg/domain/order"
 	"github.com/perocha/producer/pkg/service"
 )
 
@@ -51,40 +47,33 @@ func main() {
 		panic(err)
 	}
 
+	// Initialize HTTP receiver
+	httpReceiver, err := httpadapter.HTTPServerAdapterInit(ctx, cfg.HttpPortNumber)
+	if err != nil {
+		xTelemetry.Error(ctx, "Main::Failed to initialize HTTP receiver", telemetry.String("Error", err.Error()))
+		panic(err)
+	}
+
+	// Create a channel to listen for termination signals
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+
 	// Start the service instance
-	serviceInstance := service.Initialize(ctx, eventHubInstance)
+	serviceInstance := service.Initialize(ctx, eventHubInstance, httpReceiver)
 	if serviceInstance == nil {
 		xTelemetry.Error(ctx, "Main::Failed to initialize service", telemetry.String("Error", "Failed to initialize service"))
 		panic("Failed to initialize service")
 	}
 	xTelemetry.Info(ctx, "Main::Service initialized successfully")
 
-	// Define an HTTP handler function for refreshing configuration
-	http.HandleFunc("/refresh-config", func(w http.ResponseWriter, r *http.Request) {
-		// Refresh the configuration with the latest values
-		err := cfg.RefreshConfig()
-		if err != nil {
-			xTelemetry.Error(ctx, "Main::Failed to refresh configuration", telemetry.String("Error", err.Error()))
-			http.Error(w, "Failed to refresh configuration", http.StatusInternalServerError)
-			return
-		}
-		xTelemetry.Info(ctx, "Main::Configuration refreshed successfully")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Configuration refreshed successfully"))
-	})
-
-	// Start an HTTP server
+	// Start the service
 	go func() {
-		err := http.ListenAndServe(":"+cfg.HttpPortNumber, nil)
+		err := serviceInstance.Start(ctx, signals)
 		if err != nil {
-			xTelemetry.Error(ctx, "Main::Failed to start HTTP server", telemetry.String("Error", err.Error()))
+			xTelemetry.Error(ctx, "Main::Failed to start service", telemetry.String("Error", err.Error()))
 			panic(err)
 		}
 	}()
-
-	// Create a channel to listen for termination signals
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
 	// Infinite loop
 	for {
@@ -93,39 +82,9 @@ func main() {
 			// Termination signal received
 			xTelemetry.Info(ctx, "Main::Received termination signal")
 			return
-		case <-time.After(cfg.GetTimerDuration()):
-			// Create a new message
-			operationID := uuid.New().String()
-			commandType := "create_order"
-
-			// Create the order info
-			orderPayload := order.Order{
-				Id:              uuid.New().String(),
-				ProductCategory: "Electronics",
-				ProductID:       "ABC",
-				CustomerID:      "1234",
-				Status:          "Pending",
-			}
-
-			// Serialize the orderPayload
-			jsonData, err := json.Marshal(orderPayload)
-			if err != nil {
-				xTelemetry.Error(ctx, "Main::Failed to serialize order", telemetry.String("Error", err.Error()))
-				continue
-			}
-
-			// Create the new message
-			newMessage := message.NewMessage(operationID, nil, "", commandType, jsonData)
-
-			// Publish an event to the EventHub
-			err = serviceInstance.PublishEvent(ctx, newMessage)
-			if err != nil {
-				xTelemetry.Error(ctx, "Main::Failed to publish event", telemetry.String("Error", err.Error()))
-			}
-
-			// Add the operation ID to the context
-			ctx := context.WithValue(context.Background(), telemetry.OperationIDKeyContextKey, operationID)
-			xTelemetry.Info(ctx, "Main::Published event")
+		case <-time.After(2 * time.Minute):
+			// Do nothing
+			xTelemetry.Debug(ctx, "Main::Waiting for termination signal")
 		}
 	}
 }
