@@ -29,7 +29,7 @@ func (s *ServiceImpl) Start(ctx context.Context, signals <-chan os.Signal) error
 	xTelemetry := telemetry.GetXTelemetryClient(ctx)
 
 	// Register the refresh configuration callback function
-	err := s.httpReceiver.RegisterEndPoint(ctx, "/refresh", s.RefreshConfig)
+	err := s.httpReceiver.RegisterEndPoint(ctx, "/refresh-config", s.RefreshConfig)
 	if err != nil {
 		xTelemetry.Error(ctx, "Service::Start::Failed to register refresh config endpoint", telemetry.String("Error", err.Error()))
 		return err
