@@ -28,3 +28,4 @@ jobs:
       with:
         manifests: |
           k8s/producer-deployment.yaml
+          k8s/producer-service.yaml
