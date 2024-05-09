@@ -3,7 +3,7 @@ module github.com/perocha/producer
 go 1.22.2
 
 require (
-	github.com/perocha/goadapters v1.0.59
+	github.com/perocha/goadapters v1.0.60
 	github.com/perocha/goutils v1.0.42
 )
 
