@@ -2,8 +2,12 @@ package service
 
 import (
 	"context"
+	"net/http"
 	"os"
+	"strconv"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/perocha/goadapters/comms"
 	"github.com/perocha/goadapters/comms/httpadapter"
 	"github.com/perocha/goadapters/messaging"
@@ -105,6 +109,7 @@ func (s *ServiceImpl) HealthCheck(ctx context.Context, w comms.ResponseWriter, r
 
 // Create a new event
 func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r comms.Request) {
+	startTime := time.Now()
 	xTelemetry := telemetry.GetXTelemetryClient(ctx)
 
 	// Retrieve the body of the request
@@ -116,14 +121,21 @@ func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r co
 		return
 	}
 
-	// Retrieve the headers
-	operationID := r.Header("OperationID")
-	if operationID == "" {
-		xTelemetry.Error(ctx, "Service::NewEvent::OperationID not found", telemetry.String("Error", "OperationID not found in the request header"))
-		w.WriteHeader(int(httpadapter.StatusBadRequest))
-		w.Write([]byte("OperationID not found in the request header"))
-		return
-	}
+	// Generate a new OperationID
+	operationID := uuid.New().String()
+	// Append the OperationID to the context
+	ctx = context.WithValue(ctx, telemetry.OperationIDKeyContextKey, operationID)
+
+	/*
+		// Retrieve the headers
+		operationID := r.Header("OperationID")
+		if operationID == "" {
+			xTelemetry.Error(ctx, "Service::NewEvent::OperationID not found", telemetry.String("Error", "OperationID not found in the request header"))
+			w.WriteHeader(int(httpadapter.StatusBadRequest))
+			w.Write([]byte("OperationID not found in the request header"))
+			return
+		}
+	*/
 	status := r.Header("Status")
 	if status == "" {
 		xTelemetry.Error(ctx, "Service::NewEvent::Status not found", telemetry.String("Error", "Status not found in the request header"))
@@ -150,7 +162,13 @@ func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r co
 		return
 	}
 
-	xTelemetry.Info(ctx, "Service::NewEvent::OK")
+	// Log the telemetry request
+	duration := time.Since(startTime)
+	hostname := r.Header("Host")
+	userAgent := r.Header("User-Agent")
+	xTelemetry.Request(ctx, http.MethodPost, hostname, duration, strconv.Itoa(http.StatusOK), true, userAgent, "HTTPAdapter::Publish::Success")
+
+	// Return the response
 	w.WriteHeader(int(httpadapter.StatusOK))
 	w.Write([]byte("Event published successfully"))
 }
