@@ -170,7 +170,7 @@ func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r co
 
 	// Return the response
 	w.WriteHeader(int(httpadapter.StatusOK))
-	w.Write([]byte("Event published successfully"))
+	w.Write([]byte("Event published successfully::OperationID=" + operationID))
 }
 
 // Publish an event to the messaging system
