@@ -166,7 +166,7 @@ func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r co
 	duration := time.Since(startTime)
 	hostname := r.Header("Host")
 	userAgent := r.Header("User-Agent")
-	xTelemetry.Request(ctx, http.MethodPost, hostname, duration, strconv.Itoa(http.StatusOK), true, userAgent, "HTTPAdapter::Publish::Success")
+	xTelemetry.Request(ctx, http.MethodPost, hostname, duration, strconv.Itoa(http.StatusOK), true, userAgent, "HTTPAdapter::Publish::Success", telemetry.String("Host", hostname), telemetry.String("User-Agent", userAgent))
 
 	// Return the response
 	w.WriteHeader(int(httpadapter.StatusOK))
