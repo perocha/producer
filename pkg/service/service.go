@@ -2,10 +2,8 @@ package service
 
 import (
 	"context"
-	"net/http"
+	"errors"
 	"os"
-	"strconv"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/perocha/goadapters/comms"
@@ -82,7 +80,7 @@ func (s *ServiceImpl) Stop(ctx context.Context) {
 }
 
 // Refresh the configuration
-func (s *ServiceImpl) RefreshConfig(ctx context.Context, w comms.ResponseWriter, r comms.Request) {
+func (s *ServiceImpl) RefreshConfig(ctx context.Context, w comms.ResponseWriter, r comms.Request) error {
 	xTelemetry := telemetry.GetXTelemetryClient(ctx)
 
 	/*
@@ -96,29 +94,35 @@ func (s *ServiceImpl) RefreshConfig(ctx context.Context, w comms.ResponseWriter,
 	xTelemetry.Info(ctx, "Service::RefreshConfig::OK")
 	w.WriteHeader(int(httpadapter.StatusOK))
 	w.Write([]byte("Configuration refreshed successfully"))
+
+	return nil
 }
 
 // Health check
-func (s *ServiceImpl) HealthCheck(ctx context.Context, w comms.ResponseWriter, r comms.Request) {
+func (s *ServiceImpl) HealthCheck(ctx context.Context, w comms.ResponseWriter, r comms.Request) error {
 	xTelemetry := telemetry.GetXTelemetryClient(ctx)
 	xTelemetry.Info(ctx, "Service::HealthCheck::OK")
 
 	w.WriteHeader(int(httpadapter.StatusOK))
 	w.Write([]byte("OK"))
+
+	return nil
 }
 
 // Create a new event
-func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r comms.Request) {
-	startTime := time.Now()
+func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r comms.Request) error {
+	//startTime := time.Now()
 	xTelemetry := telemetry.GetXTelemetryClient(ctx)
+	xTelemetry.Debug(ctx, "Service::NewEvent")
 
 	// Retrieve the body of the request
 	body := r.Body()
 	if body == nil {
-		xTelemetry.Error(ctx, "Service::NewEvent::Failed to read body", telemetry.String("Error", "Body is nil"))
+		errorMessage := "failed to read body"
 		w.WriteHeader(int(httpadapter.StatusBadRequest))
-		w.Write([]byte("Failed to read body"))
-		return
+		w.Write([]byte(errorMessage))
+		err := errors.New(errorMessage)
+		return err
 	}
 
 	// Generate a new OperationID
@@ -126,29 +130,23 @@ func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r co
 	// Append the OperationID to the context
 	ctx = context.WithValue(ctx, telemetry.OperationIDKeyContextKey, operationID)
 
-	/*
-		// Retrieve the headers
-		operationID := r.Header("OperationID")
-		if operationID == "" {
-			xTelemetry.Error(ctx, "Service::NewEvent::OperationID not found", telemetry.String("Error", "OperationID not found in the request header"))
-			w.WriteHeader(int(httpadapter.StatusBadRequest))
-			w.Write([]byte("OperationID not found in the request header"))
-			return
-		}
-	*/
 	status := r.Header("Status")
 	if status == "" {
-		xTelemetry.Error(ctx, "Service::NewEvent::Status not found", telemetry.String("Error", "Status not found in the request header"))
+		// xTelemetry.Error(ctx, "Service::NewEvent::Status not found", telemetry.String("Error", "Status not found in the request header"))
 		w.WriteHeader(int(httpadapter.StatusBadRequest))
-		w.Write([]byte("Status not found in the request header"))
-		return
+		errorMessage := "status not found in the request header"
+		w.Write([]byte(errorMessage))
+		err := errors.New(errorMessage)
+		return err
 	}
 	command := r.Header("Command")
 	if command == "" {
-		xTelemetry.Error(ctx, "Service::NewEvent::Command not found", telemetry.String("Error", "Command not found in the request header"))
+		// xTelemetry.Error(ctx, "Service::NewEvent::Command not found", telemetry.String("Error", "Command not found in the request header"))
 		w.WriteHeader(int(httpadapter.StatusBadRequest))
-		w.Write([]byte("Command not found in the request header"))
-		return
+		errorMessage := "command not found in the request header"
+		w.Write([]byte(errorMessage))
+		err := errors.New(errorMessage)
+		return err
 	}
 	// Create a new message
 	msg := messaging.NewMessage(operationID, nil, status, command, body)
@@ -156,21 +154,17 @@ func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r co
 	// Publish the event
 	err := s.publishEvent(ctx, msg)
 	if err != nil {
-		xTelemetry.Error(ctx, "Service::NewEvent::Failed to publish event", telemetry.String("Error", err.Error()))
 		w.WriteHeader(int(httpadapter.StatusInternalServerError))
-		w.Write([]byte("Failed to publish event"))
-		return
+		errorMessage := "failed to publish event"
+		w.Write([]byte(errorMessage))
+		err := errors.New(errorMessage)
+		return err
 	}
-
-	// Log the telemetry request
-	duration := time.Since(startTime)
-	hostname := r.Header("Host")
-	userAgent := r.Header("User-Agent")
-	xTelemetry.Request(ctx, http.MethodPost, hostname, duration, strconv.Itoa(http.StatusOK), true, userAgent, "HTTPAdapter::Publish::Success", telemetry.String("Host", hostname), telemetry.String("User-Agent", userAgent))
 
 	// Return the response
 	w.WriteHeader(int(httpadapter.StatusOK))
 	w.Write([]byte("Event published successfully::OperationID=" + operationID))
+	return nil
 }
 
 // Publish an event to the messaging system

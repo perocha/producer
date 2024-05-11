@@ -39,6 +39,7 @@ func main() {
 	}
 	// Add telemetry object to the context, so that it can be reused across the application
 	ctx := context.WithValue(context.Background(), telemetry.TelemetryContextKey, xTelemetry)
+	ctx = context.WithValue(ctx, telemetry.ServiceNameContextKey, SERVICE_NAME)
 
 	// Initialize EventHub
 	eventHubInstance, err := eventhub.ProducerInitializer(ctx, cfg.EventHubName, cfg.EventHubConnectionString)

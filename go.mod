@@ -4,8 +4,8 @@ go 1.22.2
 
 require (
 	github.com/google/uuid v1.6.0
-	github.com/perocha/goadapters v1.0.60
-	github.com/perocha/goutils v1.0.44
+	github.com/perocha/goadapters v1.0.67
+	github.com/perocha/goutils v1.0.48
 )
 
 require (
