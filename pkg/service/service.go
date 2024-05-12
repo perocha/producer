@@ -110,7 +110,6 @@ func (s *ServiceImpl) HealthCheck(ctx context.Context, w comms.ResponseWriter, r
 
 // Create a new event
 func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r comms.Request) (context.Context, error) {
-	//startTime := time.Now()
 	xTelemetry := telemetry.GetXTelemetryClient(ctx)
 	xTelemetry.Debug(ctx, "Service::NewEvent")
 
@@ -142,11 +141,12 @@ func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r co
 		err := errors.New(errorMessage)
 		return ctx, err
 	}
-	// Create a new message
-	msg := messaging.NewMessage(nil, status, command, body)
+	// Create a new message with the operation id that we get from the context
+	operationID := telemetry.GetOperationID(ctx)
+	msg := messaging.NewMessage(operationID, nil, status, command, body)
 
 	// Publish the event
-	err := s.publishEvent(ctx, msg)
+	err := s.messagingClient.Publish(ctx, msg)
 	if err != nil {
 		w.WriteHeader(int(httpadapter.StatusInternalServerError))
 		errorMessage := "failed to publish event"
@@ -155,26 +155,10 @@ func (s *ServiceImpl) NewEvent(ctx context.Context, w comms.ResponseWriter, r co
 		return ctx, err
 	}
 
-	// Get operation id from context
-	operationID := telemetry.GetOperationID(ctx)
-
 	// Return the response
 	w.WriteHeader(int(httpadapter.StatusOK))
 	w.Write([]byte("Event published successfully::OperationID=" + operationID))
 	return ctx, nil
-}
-
-// Publish an event to the messaging system
-func (s *ServiceImpl) publishEvent(ctx context.Context, data messaging.Message) error {
-	xTelemetry := telemetry.GetXTelemetryClient(ctx)
-
-	err := s.messagingClient.Publish(ctx, data)
-	if err != nil {
-		xTelemetry.Error(ctx, "Service::Publish::Failed", telemetry.String("Error", err.Error()))
-		return err
-	}
-
-	return nil
 }
 
 func (s *ServiceImpl) Close(ctx context.Context) {
