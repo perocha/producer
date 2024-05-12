@@ -3,9 +3,8 @@ module github.com/perocha/producer
 go 1.22.2
 
 require (
-	github.com/google/uuid v1.6.0
-	github.com/perocha/goadapters v1.0.67
-	github.com/perocha/goutils v1.0.48
+	github.com/perocha/goadapters v1.0.74
+	github.com/perocha/goutils v1.0.49
 )
 
 require (
@@ -17,6 +16,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.3.2 // indirect
 	github.com/Azure/go-amqp v1.0.5 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/microsoft/ApplicationInsights-Go v0.4.4 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
